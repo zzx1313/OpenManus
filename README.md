@@ -70,6 +70,12 @@ python main.py
 
 Then input your idea via terminal!
 
+For unstable version, you also can run:
+
+```bash
+python run_flow.py
+```
+
 ## How to contribute
 We welcome any friendly suggestions and helpful contributions! Just create issues or submit pull requests.
 

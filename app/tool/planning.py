@@ -66,10 +66,9 @@ class PlanningTool(BaseTool):
         "additionalProperties": False,
     }
 
-    _plans = {}  # Dictionary to store plans by plan_id
-    _current_plan_id = None  # Track the current active plan
+    plans: dict = {}  # Dictionary to store plans by plan_id
+    _current_plan_id: Optional[str] = None  # Track the current active plan
 
-    # async def __call__(
     async def execute(
         self,
         *,
@@ -125,7 +124,7 @@ class PlanningTool(BaseTool):
         if not plan_id:
             raise ToolError("Parameter `plan_id` is required for command: create")
 
-        if plan_id in self._plans:
+        if plan_id in self.plans:
             raise ToolError(
                 f"A plan with ID '{plan_id}' already exists. Use 'update' to modify existing plans."
             )
@@ -151,7 +150,7 @@ class PlanningTool(BaseTool):
             "step_notes": [""] * len(steps),
         }
 
-        self._plans[plan_id] = plan
+        self.plans[plan_id] = plan
         self._current_plan_id = plan_id  # Set as active plan
 
         return ToolResult(
@@ -165,10 +164,10 @@ class PlanningTool(BaseTool):
         if not plan_id:
             raise ToolError("Parameter `plan_id` is required for command: update")
 
-        if plan_id not in self._plans:
+        if plan_id not in self.plans:
             raise ToolError(f"No plan found with ID: {plan_id}")
 
-        plan = self._plans[plan_id]
+        plan = self.plans[plan_id]
 
         if title:
             plan["title"] = title
@@ -209,13 +208,13 @@ class PlanningTool(BaseTool):
 
     def _list_plans(self) -> ToolResult:
         """List all available plans."""
-        if not self._plans:
+        if not self.plans:
             return ToolResult(
                 output="No plans available. Create a plan with the 'create' command."
             )
 
         output = "Available plans:\n"
-        for plan_id, plan in self._plans.items():
+        for plan_id, plan in self.plans.items():
             current_marker = " (active)" if plan_id == self._current_plan_id else ""
             completed = sum(
                 1 for status in plan["step_statuses"] if status == "completed"
@@ -236,10 +235,10 @@ class PlanningTool(BaseTool):
                 )
             plan_id = self._current_plan_id
 
-        if plan_id not in self._plans:
+        if plan_id not in self.plans:
             raise ToolError(f"No plan found with ID: {plan_id}")
 
-        plan = self._plans[plan_id]
+        plan = self.plans[plan_id]
         return ToolResult(output=self._format_plan(plan))
 
     def _set_active_plan(self, plan_id: Optional[str]) -> ToolResult:
@@ -247,12 +246,12 @@ class PlanningTool(BaseTool):
         if not plan_id:
             raise ToolError("Parameter `plan_id` is required for command: set_active")
 
-        if plan_id not in self._plans:
+        if plan_id not in self.plans:
             raise ToolError(f"No plan found with ID: {plan_id}")
 
         self._current_plan_id = plan_id
         return ToolResult(
-            output=f"Plan '{plan_id}' is now the active plan.\n\n{self._format_plan(self._plans[plan_id])}"
+            output=f"Plan '{plan_id}' is now the active plan.\n\n{self._format_plan(self.plans[plan_id])}"
         )
 
     def _mark_step(
@@ -271,13 +270,13 @@ class PlanningTool(BaseTool):
                 )
             plan_id = self._current_plan_id
 
-        if plan_id not in self._plans:
+        if plan_id not in self.plans:
             raise ToolError(f"No plan found with ID: {plan_id}")
 
         if step_index is None:
             raise ToolError("Parameter `step_index` is required for command: mark_step")
 
-        plan = self._plans[plan_id]
+        plan = self.plans[plan_id]
 
         if step_index < 0 or step_index >= len(plan["steps"]):
             raise ToolError(
@@ -309,10 +308,10 @@ class PlanningTool(BaseTool):
         if not plan_id:
             raise ToolError("Parameter `plan_id` is required for command: delete")
 
-        if plan_id not in self._plans:
+        if plan_id not in self.plans:
             raise ToolError(f"No plan found with ID: {plan_id}")
 
-        del self._plans[plan_id]
+        del self.plans[plan_id]
 
         # If the deleted plan was the active plan, clear the active plan
         if self._current_plan_id == plan_id:

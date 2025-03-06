@@ -1,67 +1,48 @@
+import json
 import time
 from typing import Dict, List, Optional, Union
 
+from pydantic import Field
+
 from app.agent.base import BaseAgent
 from app.flow.base import BaseFlow
+from app.llm import LLM
 from app.logger import logger
-from app.schema import AgentState
-from app.tool import PlanningTool, ToolCollection
+from app.schema import AgentState, Message
+from app.tool import PlanningTool
 
 
 class PlanningFlow(BaseFlow):
     """A flow that manages planning and execution of tasks using agents."""
 
+    llm: LLM = Field(default_factory=lambda: LLM())
+    planning_tool: PlanningTool = Field(default_factory=PlanningTool)
+    executor_keys: List[str] = Field(default_factory=list)
+    active_plan_id: str = Field(default_factory=lambda: f"plan_{int(time.time())}")
+    current_step_index: Optional[int] = None
+
     def __init__(
-        self, agents: Union[BaseAgent, List[BaseAgent], Dict[str, BaseAgent]], **kwargs
+        self, agents: Union[BaseAgent, List[BaseAgent], Dict[str, BaseAgent]], **data
     ):
-        # Initialize planning tool first
-        self.planning_tool = self._initialize_planning_tool(kwargs.get("tools"))
+        # Set executor keys before super().__init__
+        if "executors" in data:
+            data["executor_keys"] = data.pop("executors")
 
-        # If tools were provided, ensure planning tool is included
-        tools = kwargs.get("tools")
-        if tools:
-            planning_tool_exists = any(
-                isinstance(tool, PlanningTool) for tool in tools.tools
-            )
-            if not planning_tool_exists:
-                tools.add_tool(self.planning_tool)
-        else:
-            # Create a new tool collection with at least the planning tool
-            tools = ToolCollection(self.planning_tool)
-            kwargs["tools"] = tools
+        # Set plan ID if provided
+        if "plan_id" in data:
+            data["active_plan_id"] = data.pop("plan_id")
 
-        super().__init__(agents, **kwargs)
+        # Initialize the planning tool if not provided
+        if "planning_tool" not in data:
+            planning_tool = PlanningTool()
+            data["planning_tool"] = planning_tool
 
-        # Define agent roles
-        self.planner_key = kwargs.get("planner", self.primary_agent_key)
-        self.executor_keys = kwargs.get("executors", list(self.agents.keys()))
+        # Call parent's init with the processed data
+        super().__init__(agents, **data)
 
-        # Planning state tracking
-        self.active_plan_id = kwargs.get("plan_id", f"plan_{int(time.time())}")
-        self.current_step_index = None
-
-        # Ensure the planning tool has been initialized properly
-        if not hasattr(self.planning_tool, "_plans"):
-            self.planning_tool._plans = {}
-
-    def _initialize_planning_tool(
-        self, tools: Optional[ToolCollection]
-    ) -> PlanningTool:
-        """Initialize planning tool, reusing existing one if available"""
-        if tools:
-            for tool in tools.tools:
-                if isinstance(tool, PlanningTool):
-                    return tool
-        return PlanningTool()
-
-    @property
-    def planner(self) -> Optional[BaseAgent]:
-        """Get the planning agent"""
-        return (
-            self.agents.get(self.planner_key)
-            if self.planner_key
-            else self.primary_agent
-        )
+        # Set executor_keys to all agent keys if not specified
+        if not self.executor_keys:
+            self.executor_keys = list(self.agents.keys())
 
     def get_executor(self, step_type: Optional[str] = None) -> BaseAgent:
         """
@@ -91,7 +72,7 @@ class PlanningFlow(BaseFlow):
                 await self._create_initial_plan(input_text)
 
                 # Verify plan was created successfully
-                if self.active_plan_id not in self.planning_tool._plans:
+                if self.active_plan_id not in self.planning_tool.plans:
                     logger.error(
                         f"Plan creation failed. Plan ID {self.active_plan_id} not found in planning tool."
                     )
@@ -123,76 +104,61 @@ class PlanningFlow(BaseFlow):
             return f"Execution failed: {str(e)}"
 
     async def _create_initial_plan(self, request: str) -> None:
-        """Create an initial plan based on the request using an appropriate agent."""
+        """Create an initial plan based on the request using the flow's LLM and PlanningTool."""
         logger.info(f"Creating initial plan with ID: {self.active_plan_id}")
 
-        agent = self.planner if self.planner else self.primary_agent
+        # Create a system message for plan creation
+        system_message = Message.system_message(
+            "You are a planning assistant. Your task is to create a detailed plan with clear steps."
+        )
 
-        # First, directly create an empty plan to ensure the plan ID exists
-        self.planning_tool._plans[self.active_plan_id] = {
-            "title": f"Plan for: {request[:50]}{'...' if len(request) > 50 else ''}",
-            "description": f"Auto-generated plan for request: {request}",
-            "steps": [],
-            "step_status": {},
-            "created_at": time.time(),
-            "updated_at": time.time(),
-        }
+        # Create a user message with the request
+        user_message = Message.user_message(
+            f"Create a detailed plan to accomplish this task: {request}"
+        )
 
-        # Use agent.run to create the plan
-        plan_prompt = f"""
-        I need you to create a detailed plan to accomplish this task:
+        # Call LLM with PlanningTool
+        response = await self.llm.ask_tool(
+            messages=[user_message],
+            system_msgs=[system_message],
+            tools=[self.planning_tool.to_param()],
+            tool_choice="required",
+        )
 
-        {request}
+        # Process tool calls if present
+        if response.tool_calls:
+            for tool_call in response.tool_calls:
+                if tool_call.function.name == "planning":
+                    # Parse the arguments
+                    args = tool_call.function.arguments
+                    if isinstance(args, str):
+                        try:
+                            args = json.loads(args)
+                        except json.JSONDecodeError:
+                            logger.error(f"Failed to parse tool arguments: {args}")
+                            continue
 
-        Please create a plan with ID {self.active_plan_id} using the planning tool.
-        The plan should include all necessary steps to complete the task.
-        """
+                    # Ensure plan_id is set correctly and execute the tool
+                    args["plan_id"] = self.active_plan_id
 
-        try:
-            plan_result = await agent.run(plan_prompt)
-            logger.info(f"Plan creation result: {plan_result[:200]}...")
+                    # Execute the tool via ToolCollection instead of directly
+                    result = await self.planning_tool.execute(**args)
 
-            # Verify the plan was created
-            if (
-                self.active_plan_id not in self.planning_tool._plans
-                or not self.planning_tool._plans[self.active_plan_id].get("steps")
-            ):
-                logger.warning(
-                    "Plan may not have been created properly. Creating default plan."
-                )
-                await self._create_default_plan(request)
-        except Exception as e:
-            logger.error(f"Error creating plan: {e}")
-            await self._create_default_plan(request)
+                    logger.info(f"Plan creation result: {str(result)}")
+                    return
 
-    async def _create_default_plan(self, request: str) -> None:
-        """Create a default plan if the agent fails to create one."""
-        try:
-            # Try using the planning tool directly
-            await self.planning_tool.execute(
-                command="create",
-                plan_id=self.active_plan_id,
-                title=f"Plan for: {request[:50]}{'...' if len(request) > 50 else ''}",
-                description=f"Auto-generated plan for request: {request}",
-                steps=["Analyze request", "Execute task", "Verify results"],
-            )
-        except Exception as e:
-            logger.error(f"Failed to create default plan with planning tool: {e}")
-            # Create plan directly in the planning tool's storage
-            self.planning_tool._plans[self.active_plan_id] = {
-                "title": f"Emergency Plan for: {request[:50]}{'...' if len(request) > 50 else ''}",
-                "description": f"Emergency auto-generated plan for request: {request}",
+        # If execution reached here, create a default plan
+        logger.warning("Creating default plan")
+
+        # Create default plan using the ToolCollection
+        await self.planning_tool.execute(
+            **{
+                "command": "create",
+                "plan_id": self.active_plan_id,
+                "title": f"Plan for: {request[:50]}{'...' if len(request) > 50 else ''}",
                 "steps": ["Analyze request", "Execute task", "Verify results"],
-                "step_status": {
-                    "0": "not_started",
-                    "1": "not_started",
-                    "2": "not_started",
-                },
-                "created_at": time.time(),
-                "updated_at": time.time(),
             }
-
-        logger.info(f"Created default plan with ID: {self.active_plan_id}")
+        )
 
     async def _get_current_step_info(self) -> tuple[Optional[int], Optional[dict]]:
         """
@@ -201,20 +167,24 @@ class PlanningFlow(BaseFlow):
         """
         if (
             not self.active_plan_id
-            or self.active_plan_id not in self.planning_tool._plans
+            or self.active_plan_id not in self.planning_tool.plans
         ):
             logger.error(f"Plan with ID {self.active_plan_id} not found")
             return None, None
 
         try:
-            # Direct access to step status from planning tool storage
-            plan_data = self.planning_tool._plans[self.active_plan_id]
+            # Direct access to plan data from planning tool storage
+            plan_data = self.planning_tool.plans[self.active_plan_id]
             steps = plan_data.get("steps", [])
-            step_status = plan_data.get("step_status", {})
+            step_statuses = plan_data.get("step_statuses", [])
 
             # Find first non-completed step
             for i, step in enumerate(steps):
-                status = step_status.get(str(i), "not_started")
+                if i >= len(step_statuses):
+                    status = "not_started"
+                else:
+                    status = step_statuses[i]
+
                 if status in ["not_started", "in_progress"]:
                     # Extract step type/category if available
                     step_info = {"text": step}
@@ -236,10 +206,15 @@ class PlanningFlow(BaseFlow):
                         )
                     except Exception as e:
                         logger.warning(f"Error marking step as in_progress: {e}")
-                        # Update step status directly
-                        step_status[str(i)] = "in_progress"
-                        plan_data["step_status"] = step_status
-                        plan_data["updated_at"] = time.time()
+                        # Update step status directly if needed
+                        if i < len(step_statuses):
+                            step_statuses[i] = "in_progress"
+                        else:
+                            while len(step_statuses) < i:
+                                step_statuses.append("not_started")
+                            step_statuses.append("in_progress")
+
+                        plan_data["step_statuses"] = step_statuses
 
                     return i, step_info
 
@@ -297,12 +272,17 @@ class PlanningFlow(BaseFlow):
         except Exception as e:
             logger.warning(f"Failed to update plan status: {e}")
             # Update step status directly in planning tool storage
-            if self.active_plan_id in self.planning_tool._plans:
-                plan_data = self.planning_tool._plans[self.active_plan_id]
-                step_status = plan_data.get("step_status", {})
-                step_status[str(self.current_step_index)] = "completed"
-                plan_data["step_status"] = step_status
-                plan_data["updated_at"] = time.time()
+            if self.active_plan_id in self.planning_tool.plans:
+                plan_data = self.planning_tool.plans[self.active_plan_id]
+                step_statuses = plan_data.get("step_statuses", [])
+
+                # Ensure the step_statuses list is long enough
+                while len(step_statuses) <= self.current_step_index:
+                    step_statuses.append("not_started")
+
+                # Update the status
+                step_statuses[self.current_step_index] = "completed"
+                plan_data["step_statuses"] = step_statuses
 
     async def _get_plan_text(self) -> str:
         """Get the current plan as formatted text."""
@@ -318,14 +298,20 @@ class PlanningFlow(BaseFlow):
     def _generate_plan_text_from_storage(self) -> str:
         """Generate plan text directly from storage if the planning tool fails."""
         try:
-            if self.active_plan_id not in self.planning_tool._plans:
+            if self.active_plan_id not in self.planning_tool.plans:
                 return f"Error: Plan with ID {self.active_plan_id} not found"
 
-            plan_data = self.planning_tool._plans[self.active_plan_id]
+            plan_data = self.planning_tool.plans[self.active_plan_id]
             title = plan_data.get("title", "Untitled Plan")
-            description = plan_data.get("description", "")
             steps = plan_data.get("steps", [])
-            step_status = plan_data.get("step_status", {})
+            step_statuses = plan_data.get("step_statuses", [])
+            step_notes = plan_data.get("step_notes", [])
+
+            # Ensure step_statuses and step_notes match the number of steps
+            while len(step_statuses) < len(steps):
+                step_statuses.append("not_started")
+            while len(step_notes) < len(steps):
+                step_notes.append("")
 
             # Count steps by status
             status_counts = {
@@ -334,7 +320,8 @@ class PlanningFlow(BaseFlow):
                 "blocked": 0,
                 "not_started": 0,
             }
-            for status in step_status.values():
+
+            for status in step_statuses:
                 if status in status_counts:
                     status_counts[status] += 1
 
@@ -344,7 +331,7 @@ class PlanningFlow(BaseFlow):
 
             plan_text = f"Plan: {title} (ID: {self.active_plan_id})\n"
             plan_text += "=" * len(plan_text) + "\n\n"
-            plan_text += f"{description}\n\n" if description else ""
+
             plan_text += (
                 f"Progress: {completed}/{total} steps completed ({progress:.1f}%)\n"
             )
@@ -352,8 +339,9 @@ class PlanningFlow(BaseFlow):
             plan_text += f"{status_counts['blocked']} blocked, {status_counts['not_started']} not started\n\n"
             plan_text += "Steps:\n"
 
-            for i, step in enumerate(steps):
-                status = step_status.get(str(i), "not_started")
+            for i, (step, status, notes) in enumerate(
+                zip(steps, step_statuses, step_notes)
+            ):
                 if status == "completed":
                     status_mark = "[✓]"
                 elif status == "in_progress":
@@ -364,39 +352,48 @@ class PlanningFlow(BaseFlow):
                     status_mark = "[ ]"
 
                 plan_text += f"{i}. {status_mark} {step}\n"
+                if notes:
+                    plan_text += f"   Notes: {notes}\n"
 
             return plan_text
         except Exception as e:
             logger.error(f"Error generating plan text from storage: {e}")
             return f"Error: Unable to retrieve plan with ID {self.active_plan_id}"
 
-    async def _get_plan(self) -> dict:
-        """Get the current plan as a dictionary."""
-        if (
-            not self.active_plan_id
-            or self.active_plan_id not in self.planning_tool._plans
-        ):
-            return {}
-        return self.planning_tool._plans[self.active_plan_id]
-
     async def _finalize_plan(self) -> str:
-        """Finalize the plan and provide a summary using an appropriate agent."""
-        agent = self.planner if self.planner else self.primary_agent
+        """Finalize the plan and provide a summary using the flow's LLM directly."""
         plan_text = await self._get_plan_text()
 
-        # Create a summary prompt
-        summary_prompt = f"""
-        The plan has been completed. Here is the final plan status:
-
-        {plan_text}
-
-        Please provide a summary of what was accomplished and any final thoughts.
-        """
-
-        # Use agent.run() to generate the summary
+        # Create a summary using the flow's LLM directly
         try:
-            summary = await agent.run(summary_prompt)
-            return f"Plan completed:\n\n{summary}"
+            system_message = Message.system_message(
+                "You are a planning assistant. Your task is to summarize the completed plan."
+            )
+
+            user_message = Message.user_message(
+                f"The plan has been completed. Here is the final plan status:\n\n{plan_text}\n\nPlease provide a summary of what was accomplished and any final thoughts."
+            )
+
+            response = await self.llm.ask(
+                messages=[user_message], system_msgs=[system_message]
+            )
+
+            return f"Plan completed:\n\n{response}"
         except Exception as e:
-            logger.error(f"Error finalizing plan: {e}")
-            return "Plan completed. Error generating summary."
+            logger.error(f"Error finalizing plan with LLM: {e}")
+
+            # Fallback to using an agent for the summary
+            try:
+                agent = self.primary_agent
+                summary_prompt = f"""
+                The plan has been completed. Here is the final plan status:
+
+                {plan_text}
+
+                Please provide a summary of what was accomplished and any final thoughts.
+                """
+                summary = await agent.run(summary_prompt)
+                return f"Plan completed:\n\n{summary}"
+            except Exception as e2:
+                logger.error(f"Error finalizing plan with agent: {e2}")
+                return "Plan completed. Error generating summary."

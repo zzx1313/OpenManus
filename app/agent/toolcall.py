@@ -50,17 +50,22 @@ class ToolCallAgent(ReActAgent):
         self.tool_calls = response.tool_calls
 
         # Log response info
-        logger.info(f"Tool content: {response.content}")
+        logger.info(f"✨ {self.name}'s thoughts: {response.content}")
         logger.info(
-            f"Tool calls count: {len(response.tool_calls) if response.tool_calls else 0}"
+            f"🛠️ {self.name} selected {len(response.tool_calls) if response.tool_calls else 0} tools to use"
         )
-        logger.info(f"Tool calls: {response.tool_calls}")
+        if response.tool_calls:
+            logger.info(
+                f"🧰 Tools being prepared: {[call.function.name for call in response.tool_calls]}"
+            )
 
         try:
             # Handle different tool_choices modes
             if self.tool_choices == "none":
                 if response.tool_calls:
-                    logger.warning("Tool calls provided when tool_choice is 'none'")
+                    logger.warning(
+                        f"🤔 Hmm, {self.name} tried to use tools when they weren't available!"
+                    )
                 if response.content:
                     self.memory.add_message(Message.assistant_message(response.content))
                     return True
@@ -85,7 +90,7 @@ class ToolCallAgent(ReActAgent):
 
             return bool(self.tool_calls)
         except Exception as e:
-            logger.error(f"Error in thinking phase: {e}")
+            logger.error(f"🚨 Oops! The {self.name}'s thinking process hit a snag: {e}")
             self.memory.add_message(
                 Message.assistant_message(
                     f"Error encountered while processing: {str(e)}"
@@ -105,7 +110,9 @@ class ToolCallAgent(ReActAgent):
         results = []
         for command in self.tool_calls:
             result = await self.execute_tool(command)
-            logger.info(f"Executed tool {command.function.name} with result: {result}")
+            logger.info(
+                f"🎯 Tool '{command.function.name}' completed its mission! Result: {result}"
+            )
 
             # Add tool response to memory
             tool_msg = Message.tool_message(
@@ -130,6 +137,7 @@ class ToolCallAgent(ReActAgent):
             args = json.loads(command.function.arguments or "{}")
 
             # Execute the tool
+            logger.info(f"🔧 Activating tool: '{name}'...")
             result = await self.available_tools.execute(name=name, tool_input=args)
 
             # Format result for display
@@ -145,10 +153,12 @@ class ToolCallAgent(ReActAgent):
             return observation
         except json.JSONDecodeError:
             error_msg = f"Error parsing arguments for {name}: Invalid JSON format"
-            logger.error(error_msg)
+            logger.error(
+                f"📝 Oops! The arguments for '{name}' don't make sense - invalid JSON"
+            )
             return f"Error: {error_msg}"
         except Exception as e:
-            error_msg = f"Error executing tool {name}: {str(e)}"
+            error_msg = f"⚠️ Tool '{name}' encountered a problem: {str(e)}"
             logger.error(error_msg)
             return f"Error: {error_msg}"
 
@@ -159,6 +169,7 @@ class ToolCallAgent(ReActAgent):
 
         if self._should_finish_execution(name=name, result=result, **kwargs):
             # Set agent state to finished
+            logger.info(f"🏁 Special tool '{name}' has completed the task!")
             self.state = AgentState.FINISHED
 
     @staticmethod

@@ -2,43 +2,47 @@ from abc import ABC, abstractmethod
 from enum import Enum
 from typing import Dict, List, Optional, Union
 
+from pydantic import BaseModel
+
 from app.agent.base import BaseAgent
-from app.agent.toolcall import ToolCallAgent
 
 
 class FlowType(str, Enum):
     PLANNING = "planning"
 
 
-class BaseFlow(ABC):
+class BaseFlow(BaseModel, ABC):
     """Base class for execution flows supporting multiple agents"""
 
+    agents: Dict[str, BaseAgent]
+    tools: Optional[List] = None
+    primary_agent_key: Optional[str] = None
+
+    class Config:
+        arbitrary_types_allowed = True
+
     def __init__(
-        self, agents: Union[BaseAgent, List[BaseAgent], Dict[str, BaseAgent]], **kwargs
+        self, agents: Union[BaseAgent, List[BaseAgent], Dict[str, BaseAgent]], **data
     ):
         # Handle different ways of providing agents
         if isinstance(agents, BaseAgent):
-            self.agents = {"default": agents}
+            agents_dict = {"default": agents}
         elif isinstance(agents, list):
-            self.agents = {f"agent_{i}": agent for i, agent in enumerate(agents)}
+            agents_dict = {f"agent_{i}": agent for i, agent in enumerate(agents)}
         else:
-            self.agents = agents
-
-        self.tools = kwargs.get("tools")
-        self.primary_agent_key = kwargs.get("primary_agent", None)
+            agents_dict = agents
 
         # If primary agent not specified, use first agent
-        if not self.primary_agent_key and self.agents:
-            self.primary_agent_key = next(iter(self.agents))
+        primary_key = data.get("primary_agent_key")
+        if not primary_key and agents_dict:
+            primary_key = next(iter(agents_dict))
+            data["primary_agent_key"] = primary_key
 
-        self._setup_agents()
+        # Set the agents dictionary
+        data["agents"] = agents_dict
 
-    def _setup_agents(self):
-        """Configure all agents with tools and initial setup"""
-        if self.tools:
-            for agent_key, agent in self.agents.items():
-                if isinstance(agent, ToolCallAgent):
-                    agent.available_tools = self.tools
+        # Initialize using BaseModel's init
+        super().__init__(**data)
 
     @property
     def primary_agent(self) -> Optional[BaseAgent]:
@@ -52,8 +56,6 @@ class BaseFlow(ABC):
     def add_agent(self, key: str, agent: BaseAgent) -> None:
         """Add a new agent to the flow"""
         self.agents[key] = agent
-        if isinstance(agent, ToolCallAgent) and self.tools:
-            agent.available_tools = self.tools
 
     @abstractmethod
     async def execute(self, input_text: str) -> str:
