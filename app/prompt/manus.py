@@ -2,11 +2,11 @@ SYSTEM_PROMPT = "You are OpenManus, an all-capable AI assistant, aimed at solvin
 
 NEXT_STEP_PROMPT = """You can interact with the computer using PythonExecute, save important content and information files through FileSaver, open browsers with BrowserUseTool, and retrieve information using GoogleSearch.
 
-PythonExecute: Execute Python code to interact with the computer system, perform file operations, data processing, automation tasks, etc.
+PythonExecute: Execute Python code to interact with the computer system, data processing, automation tasks, etc.
 
 FileSaver: Save files locally, such as txt, py, html, etc.
 
-BrowserUseTool: Open and control web browsers
+BrowserUseTool: Open, browse, and use web browsers.If you open a local HTML file, you must provide the absolute path to the file.
 
 GoogleSearch: Perform web information retrieval
 
