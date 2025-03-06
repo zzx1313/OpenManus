@@ -1,20 +1,32 @@
 import asyncio
 
-from app.agent import ToolCallAgent
+from app.agent.manus import Manus
 from app.flow.base import FlowType
 from app.flow.flow_factory import FlowFactory
 
 
 async def run_flow():
-    agent = ToolCallAgent()
+    agent = Manus()
 
-    flow = FlowFactory.create_flow(
-        flow_type=FlowType.PLANNING,
-        agents=agent,
-    )
+    while True:
+        try:
+            prompt = input("Enter your prompt (or 'exit' to quit): ")
+            if prompt.lower() == "exit":
+                print("Goodbye!")
+                break
 
-    result = await flow.execute("Create a web app that shows Japan travel destinations")
-    print(result)
+            flow = FlowFactory.create_flow(
+                flow_type=FlowType.PLANNING,
+                agents=agent,
+            )
+
+            print("Processing your request...")
+            result = await flow.execute(prompt)
+            print(result)
+
+        except KeyboardInterrupt:
+            print("Goodbye!")
+            break
 
 
 if __name__ == "__main__":
