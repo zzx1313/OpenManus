@@ -76,6 +76,7 @@ Or contact @mannaandpoem via 📧email: mannaandpoem@gmail.com
 - [ ] Live Demos
 - [ ] Replay
 - [ ] RL Fine-tuned Models
+- [ ] Comprehensive Benchmarks
 
 ## Acknowledgement
 
