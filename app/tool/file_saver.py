@@ -1,4 +1,7 @@
+import asyncio
 import os
+
+import aiofiles
 
 from app.tool.base import BaseTool
 
@@ -49,9 +52,10 @@ The tool accepts content and a file path, and saves the content to that location
                 os.makedirs(directory)
 
             # Write directly to the file
-            with open(file_path, mode, encoding="utf-8") as file:
-                file.write(content)
+            async with aiofiles.open(file_path, mode, encoding="utf-8") as file:
+                await file.write(content)
 
             return f"Content successfully saved to {file_path}"
         except Exception as e:
             return f"Error saving file: {str(e)}"
+
