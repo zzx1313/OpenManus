@@ -1,6 +1,6 @@
 # Global LLM configuration
 [llm]
-model = "gpt-4o"
+model = "claude-3-5-sonnet"
 base_url = "https://api.openai.com/v1"
 api_key = "sk-..."
 max_tokens = 4096
