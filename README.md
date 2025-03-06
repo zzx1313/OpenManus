@@ -7,6 +7,10 @@ It's a simple implementation, so we welcome any suggestions, contributions, and 
 
 Enjoy your own agent with OpenManus!
 
+## Project Demo
+![Demo Video](https://github.com/mannaandpoem/OpenManus/blob/main/demo/seo_website.mp4)
+
+
 ## Installation
 
 1. Create a new conda environment:
