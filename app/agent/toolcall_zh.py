@@ -9,6 +9,7 @@ from app.prompt.toolcall import NEXT_STEP_PROMPT, SYSTEM_PROMPT
 from app.schema import AgentState, Message, ToolCall
 from app.tool import CreateChatCompletion, Terminate, ToolCollection
 
+
 TOOL_CALL_REQUIRED = "Tool calls required but none provided"
 
 
@@ -40,7 +41,9 @@ class ToolCallAgent(ReActAgent):
         # Get response with tool options
         response = await self.llm.ask_tool(
             messages=self.messages,
-            system_msgs=[Message.system_message(self.system_prompt)] if self.system_prompt else None,
+            system_msgs=[Message.system_message(self.system_prompt)]
+            if self.system_prompt
+            else None,
             tools=self.available_tools.to_params(),
             tool_choice=self.tool_choices,
         )
@@ -48,9 +51,13 @@ class ToolCallAgent(ReActAgent):
 
         # Log response info in a more engaging way
         logger.info(f"✨ AI的思考过程：{response.content}")
-        logger.info(f"🛠️ AI选择了 {len(response.tool_calls) if response.tool_calls else 0} 个工具来解决问题")
+        logger.info(
+            f"🛠️ AI选择了 {len(response.tool_calls) if response.tool_calls else 0} 个工具来解决问题"
+        )
         if response.tool_calls:
-            logger.info(f"🧰 准备使用的工具箱：{[call.function.name for call in response.tool_calls]}")
+            logger.info(
+                f"🧰 准备使用的工具箱：{[call.function.name for call in response.tool_calls]}"
+            )
 
         try:
             # Handle different tool_choices modes
@@ -82,9 +89,11 @@ class ToolCallAgent(ReActAgent):
             return bool(self.tool_calls)
         except Exception as e:
             logger.error(f"🚨 糟糕！AI思考时遇到了一点小问题：{e}")
-            self.memory.add_message(Message.assistant_message(
-                f"Error encountered while processing: {str(e)}"
-            ))
+            self.memory.add_message(
+                Message.assistant_message(
+                    f"Error encountered while processing: {str(e)}"
+                )
+            )
             return False
 
     async def act(self) -> str:
@@ -94,9 +103,7 @@ class ToolCallAgent(ReActAgent):
                 raise ValueError(TOOL_CALL_REQUIRED)
 
             # Return last message content if no tool calls
-            return (
-                self.messages[-1].content or "No content or commands to execute"
-            )
+            return self.messages[-1].content or "No content or commands to execute"
 
         results = []
         for command in self.tool_calls:

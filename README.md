@@ -62,7 +62,7 @@ api_key = "sk-..."  # Replace with your actual API key
 ```
 
 ## Quick Start
-One line for run OpenManus:  
+One line for run OpenManus:
 
 ```bash
 python main.py
@@ -70,7 +70,7 @@ python main.py
 
 Then input your idea via terminal!
 
-## How to contribute 
+## How to contribute
 We welcome any friendly suggestions and helpful contributions! Just create issues or submit pull requests.
 
 Or contact @mannaandpoem via 📧email: mannaandpoem@gmail.com
@@ -84,6 +84,6 @@ Or contact @mannaandpoem via 📧email: mannaandpoem@gmail.com
 
 ## Acknowledgement
 
-Thanks to [broswer use](https://github.com/browser-use/browser-use) for providing basic support for this project!
+Thanks to [anthropic-computer-use](https://github.com/anthropics/anthropic-quickstarts/tree/main/computer-use-demo) and [broswer-use](https://github.com/browser-use/browser-use) for providing basic support for this project!
 
 OpenManus is built by contributors from MetaGPT. Huge thanks to this agent community!

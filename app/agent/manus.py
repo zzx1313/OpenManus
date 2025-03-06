@@ -1,15 +1,12 @@
-from pydantic import Field, model_validator
+from pydantic import Field
 
-from app.agent.planning import PlanningAgent
 from app.agent.toolcall_en import ToolCallAgent
-from app.tool import ToolCollection, Bash, Terminate
-from app.tool.planning import PlanningTool
+from app.prompt.manus import NEXT_STEP_PROMPT, SYSTEM_PROMPT
+from app.tool import Terminate, ToolCollection
 from app.tool.browser_use_tool import BrowserUseTool
+from app.tool.file_saver import FileSaver
 from app.tool.google_search import GoogleSearch
 from app.tool.python_execute import PythonExecute
-from app.tool.file_saver import FileSaver
-
-from app.prompt.manus import SYSTEM_PROMPT, NEXT_STEP_PROMPT
 
 
 class Manus(ToolCallAgent):
@@ -22,7 +19,9 @@ class Manus(ToolCallAgent):
     """
 
     name: str = "Manus"
-    description: str = "A versatile agent that can solve various tasks using multiple tools"
+    description: str = (
+        "A versatile agent that can solve various tasks using multiple tools"
+    )
 
     system_prompt: str = SYSTEM_PROMPT
     next_step_prompt: str = NEXT_STEP_PROMPT
@@ -33,4 +32,3 @@ class Manus(ToolCallAgent):
             PythonExecute(), GoogleSearch(), BrowserUseTool(), FileSaver(), Terminate()
         )
     )
-
