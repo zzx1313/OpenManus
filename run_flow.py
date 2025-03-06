@@ -5,7 +5,7 @@ from app.flow.base import FlowType
 from app.flow.flow_factory import FlowFactory
 
 
-if __name__ == "__main__":
+async def run_flow():
     agent = ToolCallAgent()
 
     flow = FlowFactory.create_flow(
@@ -13,7 +13,9 @@ if __name__ == "__main__":
         agents=agent,
     )
 
-    result = asyncio.run(
-        flow.execute("Create a web app that shows Japan travel destinations")
-    )
+    result = await flow.execute("Create a web app that shows Japan travel destinations")
     print(result)
+
+
+if __name__ == "__main__":
+    asyncio.run(run_flow())

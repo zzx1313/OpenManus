@@ -1,5 +1,6 @@
 import asyncio
-from typing import Optional, List
+from typing import List
+
 from googlesearch import search
 
 from app.tool.base import BaseTool
@@ -16,15 +17,15 @@ The tool returns a list of URLs that match the search query.
         "properties": {
             "query": {
                 "type": "string",
-                "description": "(required) The search query to submit to Google."
+                "description": "(required) The search query to submit to Google.",
             },
             "num_results": {
                 "type": "integer",
                 "description": "(optional) The number of search results to return. Default is 10.",
-                "default": 10
-            }
+                "default": 10,
+            },
         },
-        "required": ["query"]
+        "required": ["query"],
     }
 
     async def execute(self, query: str, num_results: int = 10) -> List[str]:
@@ -41,8 +42,7 @@ The tool returns a list of URLs that match the search query.
         # Run the search in a thread pool to prevent blocking
         loop = asyncio.get_event_loop()
         links = await loop.run_in_executor(
-            None,
-            lambda: list(search(query, num_results=num_results))
+            None, lambda: list(search(query, num_results=num_results))
         )
 
         return links

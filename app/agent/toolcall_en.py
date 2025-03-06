@@ -9,6 +9,7 @@ from app.prompt.toolcall import NEXT_STEP_PROMPT, SYSTEM_PROMPT
 from app.schema import AgentState, Message, ToolCall
 from app.tool import CreateChatCompletion, Terminate, ToolCollection
 
+
 TOOL_CALL_REQUIRED = "Tool calls required but none provided"
 
 
@@ -40,7 +41,9 @@ class ToolCallAgent(ReActAgent):
         # Get response with tool options
         response = await self.llm.ask_tool(
             messages=self.messages,
-            system_msgs=[Message.system_message(self.system_prompt)] if self.system_prompt else None,
+            system_msgs=[Message.system_message(self.system_prompt)]
+            if self.system_prompt
+            else None,
             tools=self.available_tools.to_params(),
             tool_choice=self.tool_choices,
         )
@@ -48,15 +51,21 @@ class ToolCallAgent(ReActAgent):
 
         # Log response info in a more engaging way
         logger.info(f"✨ AI's thoughts: {response.content}")
-        logger.info(f"🛠️ AI selected {len(response.tool_calls) if response.tool_calls else 0} tools to use")
+        logger.info(
+            f"🛠️ AI selected {len(response.tool_calls) if response.tool_calls else 0} tools to use"
+        )
         if response.tool_calls:
-            logger.info(f"🧰 Tools being prepared: {[call.function.name for call in response.tool_calls]}")
+            logger.info(
+                f"🧰 Tools being prepared: {[call.function.name for call in response.tool_calls]}"
+            )
 
         try:
             # Handle different tool_choices modes
             if self.tool_choices == "none":
                 if response.tool_calls:
-                    logger.warning("🤔 Hmm, AI tried to use tools when they weren't available!")
+                    logger.warning(
+                        "🤔 Hmm, AI tried to use tools when they weren't available!"
+                    )
                 if response.content:
                     self.memory.add_message(Message.assistant_message(response.content))
                     return True
@@ -82,9 +91,11 @@ class ToolCallAgent(ReActAgent):
             return bool(self.tool_calls)
         except Exception as e:
             logger.error(f"🚨 Oops! The AI's thinking process hit a snag: {e}")
-            self.memory.add_message(Message.assistant_message(
-                f"Error encountered while processing: {str(e)}"
-            ))
+            self.memory.add_message(
+                Message.assistant_message(
+                    f"Error encountered while processing: {str(e)}"
+                )
+            )
             return False
 
     async def act(self) -> str:
@@ -94,9 +105,7 @@ class ToolCallAgent(ReActAgent):
                 raise ValueError(TOOL_CALL_REQUIRED)
 
             # Return last message content if no tool calls
-            return (
-                self.messages[-1].content or "No content or commands to execute"
-            )
+            return self.messages[-1].content or "No content or commands to execute"
 
         results = []
         for command in self.tool_calls:
@@ -144,7 +153,9 @@ class ToolCallAgent(ReActAgent):
             return observation
         except json.JSONDecodeError:
             error_msg = f"Error parsing arguments for {name}: Invalid JSON format"
-            logger.error(f"📝 Oops! The arguments for '{name}' don't make sense - invalid JSON")
+            logger.error(
+                f"📝 Oops! The arguments for '{name}' don't make sense - invalid JSON"
+            )
             return f"Error: {error_msg}"
         except Exception as e:
             error_msg = f"Error executing tool {name}: {str(e)}"

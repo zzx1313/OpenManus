@@ -2,7 +2,8 @@ import asyncio
 import json
 from typing import Optional
 
-from browser_use import Browser as BrowserUseBrowser, BrowserConfig
+from browser_use import Browser as BrowserUseBrowser
+from browser_use import BrowserConfig
 from browser_use.browser.context import BrowserContext
 from browser_use.dom.service import DomService
 from pydantic import Field, field_validator
@@ -10,8 +11,9 @@ from pydantic_core.core_schema import ValidationInfo
 
 from app.tool.base import BaseTool, ToolResult
 
+
 _BROWSER_DESCRIPTION = """
-Interact with a web browser to perform various actions such as navigation, element interaction, 
+Interact with a web browser to perform various actions such as navigation, element interaction,
 content extraction, and tab management. Supported actions include:
 - 'navigate': Go to a specific URL
 - 'click': Click an element by index
@@ -36,35 +38,41 @@ class BrowserUseTool(BaseTool):
             "action": {
                 "type": "string",
                 "enum": [
-                    "navigate", "click", "input_text", "screenshot", "get_html", "execute_js",
-                    "scroll", "switch_tab", "new_tab", "close_tab", "refresh"
+                    "navigate",
+                    "click",
+                    "input_text",
+                    "screenshot",
+                    "get_html",
+                    "execute_js",
+                    "scroll",
+                    "switch_tab",
+                    "new_tab",
+                    "close_tab",
+                    "refresh",
                 ],
-                "description": "The browser action to perform"
+                "description": "The browser action to perform",
             },
             "url": {
                 "type": "string",
-                "description": "URL for 'navigate' or 'new_tab' actions"
+                "description": "URL for 'navigate' or 'new_tab' actions",
             },
             "index": {
                 "type": "integer",
-                "description": "Element index for 'click' or 'input_text' actions"
+                "description": "Element index for 'click' or 'input_text' actions",
             },
-            "text": {
-                "type": "string",
-                "description": "Text for 'input_text' action"
-            },
+            "text": {"type": "string", "description": "Text for 'input_text' action"},
             "script": {
                 "type": "string",
-                "description": "JavaScript code for 'execute_js' action"
+                "description": "JavaScript code for 'execute_js' action",
             },
             "scroll_amount": {
                 "type": "integer",
-                "description": "Pixels to scroll (positive for down, negative for up) for 'scroll' action"
+                "description": "Pixels to scroll (positive for down, negative for up) for 'scroll' action",
             },
             "tab_id": {
                 "type": "integer",
-                "description": "Tab ID for 'switch_tab' action"
-            }
+                "description": "Tab ID for 'switch_tab' action",
+            },
         },
         "required": ["action"],
         "dependencies": {
@@ -74,8 +82,8 @@ class BrowserUseTool(BaseTool):
             "execute_js": ["script"],
             "switch_tab": ["tab_id"],
             "new_tab": ["url"],
-            "scroll": ["scroll_amount"]
-        }
+            "scroll": ["scroll_amount"],
+        },
     }
 
     lock: asyncio.Lock = Field(default_factory=asyncio.Lock)
@@ -83,7 +91,7 @@ class BrowserUseTool(BaseTool):
     context: Optional[BrowserContext] = Field(default=None, exclude=True)
     dom_service: Optional[DomService] = Field(default=None, exclude=True)
 
-    @field_validator('parameters', mode='before')
+    @field_validator("parameters", mode="before")
     def validate_parameters(cls, v: dict, info: ValidationInfo) -> dict:
         if not v:
             raise ValueError("Parameters cannot be empty")
@@ -98,10 +106,17 @@ class BrowserUseTool(BaseTool):
             self.dom_service = DomService(await self.context.get_current_page())
         return self.context
 
-    async def execute(self, action: str, url: Optional[str] = None, index: Optional[int] = None,
-                      text: Optional[str] = None, script: Optional[str] = None,
-                      scroll_amount: Optional[int] = None, tab_id: Optional[int] = None,
-                      **kwargs) -> ToolResult:
+    async def execute(
+        self,
+        action: str,
+        url: Optional[str] = None,
+        index: Optional[int] = None,
+        text: Optional[str] = None,
+        script: Optional[str] = None,
+        scroll_amount: Optional[int] = None,
+        tab_id: Optional[int] = None,
+        **kwargs,
+    ) -> ToolResult:
         """
         Execute a specified browser action.
 
@@ -142,18 +157,22 @@ class BrowserUseTool(BaseTool):
 
                 elif action == "input_text":
                     if index is None or not text:
-                        return ToolResult(error="Index and text are required for 'input_text' action")
+                        return ToolResult(
+                            error="Index and text are required for 'input_text' action"
+                        )
                     element = await context.get_dom_element_by_index(index)
                     if not element:
                         return ToolResult(error=f"Element with index {index} not found")
                     await context._input_text_element_node(element, text)
-                    return ToolResult(output=f"Input '{text}' into element at index {index}")
+                    return ToolResult(
+                        output=f"Input '{text}' into element at index {index}"
+                    )
 
                 elif action == "screenshot":
                     screenshot = await context.take_screenshot(full_page=True)
                     return ToolResult(
                         output=f"Screenshot captured (base64 length: {len(screenshot)})",
-                        system=screenshot
+                        system=screenshot,
                     )
 
                 elif action == "get_html":
@@ -163,20 +182,30 @@ class BrowserUseTool(BaseTool):
 
                 elif action == "execute_js":
                     if not script:
-                        return ToolResult(error="Script is required for 'execute_js' action")
+                        return ToolResult(
+                            error="Script is required for 'execute_js' action"
+                        )
                     result = await context.execute_javascript(script)
                     return ToolResult(output=str(result))
 
                 elif action == "scroll":
                     if scroll_amount is None:
-                        return ToolResult(error="Scroll amount is required for 'scroll' action")
-                    await context.execute_javascript(f"window.scrollBy(0, {scroll_amount});")
+                        return ToolResult(
+                            error="Scroll amount is required for 'scroll' action"
+                        )
+                    await context.execute_javascript(
+                        f"window.scrollBy(0, {scroll_amount});"
+                    )
                     direction = "down" if scroll_amount > 0 else "up"
-                    return ToolResult(output=f"Scrolled {direction} by {abs(scroll_amount)} pixels")
+                    return ToolResult(
+                        output=f"Scrolled {direction} by {abs(scroll_amount)} pixels"
+                    )
 
                 elif action == "switch_tab":
                     if tab_id is None:
-                        return ToolResult(error="Tab ID is required for 'switch_tab' action")
+                        return ToolResult(
+                            error="Tab ID is required for 'switch_tab' action"
+                        )
                     await context.switch_to_tab(tab_id)
                     return ToolResult(output=f"Switched to tab {tab_id}")
 
@@ -210,7 +239,7 @@ class BrowserUseTool(BaseTool):
                     "url": state.url,
                     "title": state.title,
                     "tabs": [tab.model_dump() for tab in state.tabs],
-                    "interactive_elements": state.element_tree.clickable_elements_to_string()
+                    "interactive_elements": state.element_tree.clickable_elements_to_string(),
                 }
                 return ToolResult(output=json.dumps(state_info))
             except Exception as e:
