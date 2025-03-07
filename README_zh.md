@@ -1,8 +1,8 @@
-# OpenManus 🙋  
-
 <p align="left">
     &nbsp中文&nbsp ｜ <a href="README.md">English</a>&nbsp
 </p>
+
+# OpenManus 🙋  
 
 Manus 非常棒，但 OpenManus 无需邀请码即可实现任何创意 🛫！
 
