@@ -92,6 +92,13 @@ python run_flow.py
 - [ ] 强化学习微调模型
 - [ ] 全面的性能基准测试
 
+## 交流群
+加入我们的交流群，与其他开发者分享经验！
+
+<div align="center">
+    <img src="assets/community_group.jpeg" alt="OpenManus 交流群" width="300"/>
+</div>
+
 ## 致谢
 
 特别感谢 [anthropic-computer-use](https://github.com/anthropics/anthropic-quickstarts/tree/main/computer-use-demo) 和 [broswer-use](https://github.com/browser-use/browser-use) 为本项目提供的基础支持！
