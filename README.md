@@ -96,13 +96,16 @@ Or contact @mannaandpoem via 📧email: mannaandpoem@gmail.com
 - [ ] RL Fine-tuned Models
 - [ ] Comprehensive Benchmarks
 
-## Community Group
-Join our networking group and share your experience with other developers!
+<!-- ## Community Group
+Join our networking group and share your experience with other developers! -->
 
-<div align="center" style="display: flex; gap: 20px;">
+<!-- <div align="center" style="display: flex; gap: 20px;">
     <img src="assets/community_group_9.jpg" alt="OpenManus 交流群7" width="300" />
     <img src="assets/community_group_10.jpg" alt="OpenManus 交流群8" width="300" />
-</div>
+</div> -->
+## Star History
+
+[![Star History Chart](https://api.star-history.com/svg?repos=mannaandpoem/OpenManus&type=Date)](https://star-history.com/#mannaandpoem/OpenManus&Date)
 
 ## Acknowledgement
 
