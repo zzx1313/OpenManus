@@ -13,7 +13,8 @@ Manus 非常棒，但 OpenManus 无需邀请码即可实现任何创意 🛫！
 用 OpenManus 开启你的智能体之旅吧！
 
 ## 项目演示  
-[演示视频](https://github.com/mannaandpoem/OpenManus/blob/main/demo/seo_website.mp4)
+
+https://drive.google.com/file/d/1UBBtnmHqJALUg2OJ7MuvXeMbEefaxoN1/view?usp=drive_link
 
 ## 安装指南
 
@@ -91,6 +92,13 @@ python run_flow.py
 - [ ] 运行回放
 - [ ] 强化学习微调模型
 - [ ] 全面的性能基准测试
+
+## 交流群
+加入我们的交流群，与其他开发者分享经验！
+
+<div align="center">
+    <img src="assets/community_group.jpg" alt="OpenManus 交流群" width="300"/>
+</div>
 
 ## 致谢
 
