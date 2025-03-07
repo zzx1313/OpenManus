@@ -96,7 +96,7 @@ python run_flow.py
 加入我们的交流群，与其他开发者分享经验！
 
 <div align="center">
-    <img src="assets/community_group.jpeg" alt="OpenManus 交流群" width="300"/>
+    <img src="assets/community_group.jpg" alt="OpenManus 交流群" width="300"/>
 </div>
 
 ## 致谢
