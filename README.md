@@ -12,8 +12,8 @@ It's a simple implementation, so we welcome any suggestions, contributions, and 
 Enjoy your own agent with OpenManus!
 
 ## Project Demo
-[Demo Video](https://github.com/mannaandpoem/OpenManus/blob/main/demo/seo_website.mp4)
 
+https://drive.google.com/file/d/1UBBtnmHqJALUg2OJ7MuvXeMbEefaxoN1/view?usp=drive_link
 
 ## Installation
 
