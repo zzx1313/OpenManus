@@ -94,8 +94,10 @@ Or contact @mannaandpoem via 📧email: mannaandpoem@gmail.com
 
 ## Community Group
 Join our networking group and share your experience with other developers!
-<div align="center">
-    <img src="assets/community_group.jpg" alt="OpenManus Community Group" width="300"/>
+
+<div align="center" style="display: flex; gap: 20px;">
+    <img src="assets/community_group_3.jpg" alt="OpenManus 交流群3" width="300" />
+    <img src="assets/community_group_4.jpg" alt="OpenManus 交流群4" width="300" />
 </div>
 
 ## Acknowledgement
