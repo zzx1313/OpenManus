@@ -1,7 +1,7 @@
 # OpenManus 🙋
 Manus is incredible, but OpenManus can achieve any ideas without an Invite Code 🛫!
 
-Our team members @mannaandpoem @XiangJinyu @MoshiQAQ @didiforgithub from @MetaGPT built it within 3 hours!
+Our team members [@mannaandpoem](https://github.com/mannaandpoem) [@XiangJinyu](https://github.com/XiangJinyu) [@MoshiQAQ](https://github.com/MoshiQAQ) [@didiforgithub](https://github.com/didiforgithub) from [@MetaGPT](https://github.com/geekan/MetaGPT) built it within 3 hours!
 
 It's a simple implementation, so we welcome any suggestions, contributions, and feedback!
 
