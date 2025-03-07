@@ -1,5 +1,5 @@
 <p align="left">
-    &nbsp中文&nbsp ｜ <a href="README.md">English</a>&nbsp
+    中文&nbsp ｜ &nbsp<a href="README.md">English</a>&nbsp
 </p>
 
 # OpenManus 🙋  
