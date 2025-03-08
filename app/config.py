@@ -24,6 +24,7 @@ class LLMSettings(BaseModel):
     api_type: str = Field(..., description="AzureOpenai or Openai")
     api_version: str = Field(..., description="Azure Openai version if AzureOpenai")
 
+
 class AppConfig(BaseModel):
     llm: Dict[str, LLMSettings]
 
@@ -79,7 +80,6 @@ class Config:
             "temperature": base_llm.get("temperature", 1.0),
             "api_type": base_llm.get("api_type", ""),
             "api_version": base_llm.get("api_version", ""),
-
         }
 
         config_dict = {

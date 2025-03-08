@@ -1,8 +1,8 @@
 ---
-name: "🪲 Show me the Bug"  
-about: Report a bug encountered while using OpenManus and seek assistance.  
+name: "🪲 Show me the Bug"
+about: Report a bug encountered while using OpenManus and seek assistance.
 title: ''
-labels: kind/bug  
+labels: kind/bug
 assignees: ''
 ---
 

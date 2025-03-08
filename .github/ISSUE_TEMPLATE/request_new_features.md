@@ -1,9 +1,9 @@
 ---
-name: "🤔 Request new features"  
-about: Suggest ideas or features you’d like to see implemented in OpenManus.  
-title: ''  
-labels: kind/features  
-assignees: ''  
+name: "🤔 Request new features"
+about: Suggest ideas or features you’d like to see implemented in OpenManus.
+title: ''
+labels: kind/features
+assignees: ''
 ---
 
 **Feature description**

@@ -2,11 +2,11 @@ from typing import Dict, List, Literal, Optional, Union
 
 from openai import (
     APIError,
+    AsyncAzureOpenAI,
     AsyncOpenAI,
     AuthenticationError,
     OpenAIError,
     RateLimitError,
-    AsyncAzureOpenAI
 )
 from tenacity import retry, stop_after_attempt, wait_random_exponential
 
@@ -44,12 +44,10 @@ class LLM:
                 self.client = AsyncAzureOpenAI(
                     base_url=self.base_url,
                     api_key=self.api_key,
-                    api_version=self.api_version
+                    api_version=self.api_version,
                 )
             else:
-                self.client = AsyncOpenAI(
-                api_key=self.api_key, base_url=self.base_url
-            )
+                self.client = AsyncOpenAI(api_key=self.api_key, base_url=self.base_url)
 
     @staticmethod
     def format_messages(messages: List[Union[dict, Message]]) -> List[dict]:
