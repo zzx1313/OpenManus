@@ -97,13 +97,12 @@ python run_flow.py
 - [ ] 强化学习微调模型
 - [ ] 全面的性能基准测试
 
-<!-- ## 交流群
-加入我们的交流群，与其他开发者分享经验！
+## 交流群
+加入我们的飞书交流群，与其他开发者分享经验！
 
 <div align="center" style="display: flex; gap: 20px;">
-    <img src="assets/community_group_9.jpg" alt="OpenManus 交流群9" width="300" />
-    <img src="assets/community_group_10.jpg" alt="OpenManus 交流群10" width="300" />
-</div> -->
+    <img src="assets/community_group.jpg" alt="OpenManus 交流群" width="300" />
+</div>
 
 ## Star 数量
 
