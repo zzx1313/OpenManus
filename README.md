@@ -84,7 +84,7 @@ OpenManus requires configuration for the LLM APIs it uses. Follow these steps to
 1. Create a `config.toml` file in the `config` directory (you can copy from the example):
 
 ```bash
-cp config/config.example.toml config/config.toml
+cp config/config.toml config/config.toml
 ```
 
 2. Edit `config/config.toml` to add your API keys and customize settings:

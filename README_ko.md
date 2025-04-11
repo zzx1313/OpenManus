@@ -85,7 +85,7 @@ OpenManus를 사용하려면 사용하는 LLM API에 대한 설정이 필요합�
 1. `config` 디렉토리에 `config.toml` 파일을 생성하세요 (예제 파일을 복사하여 사용할 수 있습니다):
 
 ```bash
-cp config/config.example.toml config/config.toml
+cp config/config.toml config/config.toml
 ```
 
 2. `config/config.toml` 파일을 편집하여 API 키를 추가하고 설정을 커스터마이징하세요:

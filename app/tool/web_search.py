@@ -61,7 +61,7 @@ The tool returns a list of URLs that match the search query.
 
     def get_search_engine(self) -> WebSearchEngine:
         """Determines the search engine to use based on the configuration."""
-        default_engine = self._search_engine.get("google")
+        default_engine = self._search_engine.get("baidu")
         if config.search_config is None:
             return default_engine
         else:
