@@ -1,10 +1,15 @@
-[English](README.md) | [中文](README_zh.md) | [한국어](README_ko.md) | 日本語
+<p align="center">
+  <img src="assets/logo.jpg" width="200"/>
+</p>
 
+[English](README.md) | [中文](README_zh.md) | [한국어](README_ko.md) | 日本語
 
 [![GitHub stars](https://img.shields.io/github/stars/mannaandpoem/OpenManus?style=social)](https://github.com/mannaandpoem/OpenManus/stargazers)
 &ensp;
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT) &ensp;
 [![Discord Follow](https://dcbadge.vercel.app/api/server/DYn29wFk9z?style=flat)](https://discord.gg/DYn29wFk9z)
+[![Demo](https://img.shields.io/badge/Demo-Hugging%20Face-yellow)](https://huggingface.co/spaces/lyh-917/OpenManusDemo)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.15186407.svg)](https://doi.org/10.5281/zenodo.15186407)
 
 # 👋 OpenManus
 
@@ -66,7 +71,7 @@ cd OpenManus
 3. 新しい仮想環境を作成してアクティベートします：
 
 ```bash
-uv venv
+uv venv --python 3.12
 source .venv/bin/activate  # Unix/macOSの場合
 # Windowsの場合：
 # .venv\Scripts\activate
@@ -76,6 +81,11 @@ source .venv/bin/activate  # Unix/macOSの場合
 
 ```bash
 uv pip install -r requirements.txt
+```
+
+### ブラウザ自動化ツール（オプション）
+```bash
+playwright install
 ```
 
 ## 設定
@@ -116,7 +126,12 @@ python main.py
 
 その後、ターミナルからプロンプトを入力してください！
 
-開発中バージョンを試すには、以下を実行します：
+MCP ツールバージョンを使用する場合は、以下を実行します：
+```bash
+python run_mcp.py
+```
+
+開発中のマルチエージェントバージョンを試すには、以下を実行します：
 
 ```bash
 python run_flow.py
@@ -148,15 +163,18 @@ Feishuのネットワーキンググループに参加して、他の開発者�
 
 さらに、[AAAJ](https://github.com/metauto-ai/agent-as-a-judge)、[MetaGPT](https://github.com/geekan/MetaGPT)、[OpenHands](https://github.com/All-Hands-AI/OpenHands)、[SWE-agent](https://github.com/SWE-agent/SWE-agent)にも感謝します。
 
+また、Hugging Face デモスペースをサポートしてくださった阶跃星辰 (stepfun)にも感謝いたします。
+
 OpenManusはMetaGPTのコントリビューターによって構築されました。このエージェントコミュニティに大きな感謝を！
 
 ## 引用
 ```bibtex
 @misc{openmanus2025,
-  author = {Xinbin Liang and Jinyu Xiang and Zhaoyang Yu and Jiayi Zhang and Sirui Hong},
+  author = {Xinbin Liang and Jinyu Xiang and Zhaoyang Yu and Jiayi Zhang and Sirui Hong and Sheng Fan and Xiao Tang},
   title = {OpenManus: An open-source framework for building general AI agents},
   year = {2025},
-  publisher = {GitHub},
-  journal = {GitHub repository},
-  howpublished = {\url{https://github.com/mannaandpoem/OpenManus}},
+  publisher = {Zenodo},
+  doi = {10.5281/zenodo.15186407},
+  url = {https://doi.org/10.5281/zenodo.15186407},
 }
+```
